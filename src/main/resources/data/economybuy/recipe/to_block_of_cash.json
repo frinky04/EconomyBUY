@@ -1,0 +1,15 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern": [
+        "###",
+        "###",
+        "###"
+    ],
+    "key": {
+        "#": "economybuy:stack_of_cash"
+    },
+    "result": {
+        "id": "economybuy:block_of_cash",
+        "count": 1
+    }
+}
