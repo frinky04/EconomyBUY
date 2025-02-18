@@ -1,5 +1,6 @@
 package frinky.economybuy.items;
 
+import frinky.economybuy.EB_Cash_Interface;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.tooltip.TooltipType;
@@ -7,14 +8,18 @@ import net.minecraft.text.Text;
 
 import java.util.List;
 
-public class StackOfCash extends Item {
+public class StackOfCash extends Item implements EB_Cash_Interface {
     public StackOfCash(Item.Settings settings) {
         super(settings);
     }
 
     @Override
     public void appendTooltip(ItemStack stack, Item.TooltipContext context, List<Text> tooltip, TooltipType type) {
-        int money = stack.getCount() * 4 * 4;
-        tooltip.add(Text.of("$" + money));
+        tooltip.add(Text.of("$" + getValue(stack)));
+    }
+    @Override
+    public int getValue(ItemStack stack) {
+        return stack.getCount() * 4 * 4;
+
     }
 }

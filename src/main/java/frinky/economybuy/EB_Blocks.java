@@ -15,22 +15,17 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.Rarity;
 
 public class EB_Blocks {
-    public static Block register(Block block, RegistryKey<Block> blockKey, boolean shouldRegisterItem) {
-        // Sometimes, you may not want to register an item for the block.
-        // Eg: if it's a technical block like `minecraft:air` or `minecraft:end_gateway`
-        if (shouldRegisterItem) {
-            // Items need to be registered with a different type of registry key, but the ID
-            // can be the same.
-            RegistryKey<Item> itemKey = RegistryKey.of(RegistryKeys.ITEM, blockKey.getValue());
+    public static Block register_block_of_cash(Block block) {
+        RegistryKey<Item> itemKey = RegistryKey.of(RegistryKeys.ITEM, BLOCK_OF_CASH_KEY.getValue());
 
-            Item.Settings settings = new Item.Settings().registryKey(itemKey)
-                    .rarity(Rarity.EPIC);
+        Item.Settings settings = new Item.Settings().registryKey(itemKey)
+                .rarity(Rarity.EPIC);
 
-            BlockItem blockItem = new BlockOfCash(block, settings);
-            Registry.register(Registries.ITEM, itemKey, blockItem);
-        }
+        BlockItem blockItem = new BlockOfCash(block, settings);
+        Registry.register(Registries.ITEM, itemKey, blockItem);
 
-        return Registry.register(Registries.BLOCK, blockKey, block);
+
+        return Registry.register(Registries.BLOCK, BLOCK_OF_CASH_KEY, block);
     }
 
     public static void initialize() {
@@ -43,14 +38,12 @@ public class EB_Blocks {
             Identifier.of(EconomyBUY.MOD_ID, "block_of_cash")
     );
 
-    public static final Block BLOCK_OF_CASH = register(
+    public static final Block BLOCK_OF_CASH = register_block_of_cash(
             new Block(AbstractBlock.Settings.create().
                     registryKey(BLOCK_OF_CASH_KEY).
                     sounds(BlockSoundGroup.GRASS).
                     burnable().
-                    strength(0.5f)),
-            BLOCK_OF_CASH_KEY,
-            true
+                    strength(0.5f))
     );
 
 

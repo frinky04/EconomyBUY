@@ -1,11 +1,8 @@
 {
-    "type": "minecraft:crafting_shaped",
-    "pattern": [
-        "#"
+    "type": "minecraft:crafting_shapeless",
+    "ingredients": [
+        "economybuy:block_of_cash"
     ],
-    "key": {
-        "#": "economybuy:block_of_cash"
-    },
     "result": {
         "id": "economybuy:stack_of_cash",
         "count": 9

@@ -15,8 +15,8 @@ public class EconomyBUY implements ModInitializer {
 		LOGGER.info("Hello Fabric world!");
 		EB_Items.initialize();
 		EB_Blocks.initialize();
+		EB_Entities.initialize();
 		EB_Commands.initialize();
-
 
 
 	}

@@ -16,7 +16,8 @@ import net.minecraft.util.Rarity;
 import java.util.function.Function;
 
 public class EB_Items {
-    public static Item register(String path, Function<Item.Settings, Item> factory, Item.Settings settings) {
+    public static Item register(String path, Function<Item.Settings, Item> factory, Item.Settings settings)
+    {
         final RegistryKey<Item> registryKey = RegistryKey.of(RegistryKeys.ITEM, Identifier.of(EconomyBUY.MOD_ID, path));
         return Items.register(registryKey, factory, settings);
     }
@@ -31,6 +32,7 @@ public class EB_Items {
         FuelRegistryEvents.BUILD.register((builder, context) -> {
             builder.add(CASH, 50);
             builder.add(WAD_OF_CASH, 100);
+            builder.add(STACK_OF_CASH, 200);
         });
 
     }
