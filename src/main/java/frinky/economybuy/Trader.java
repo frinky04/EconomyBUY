@@ -16,7 +16,7 @@ public class Trader extends PathAwareEntity {
 
     private static final double TRACKING_RANGE = 5D; // Range in blocks to track players
     private static final float MOVEMENT_SPEED = 0.5F;
-    private final SimpleInventory traderInventory = new SimpleInventory(27);
+    private final SimpleInventory traderInventory = new SimpleInventory(54);
 
     protected Trader(EntityType<? extends PathAwareEntity> type, World world) {
         super(type, world);
@@ -24,9 +24,16 @@ public class Trader extends PathAwareEntity {
         this.setCustomName(Text.of("Trader")); // Sets the name of the NPC
         this.setNoGravity(true); // Makes the NPC not fall
         this.setCustomNameVisible(true); // Makes the name visible
+
         ((MobNavigation)this.getNavigation()).setCanPathThroughDoors(true);
 
     }
+
+    @Override
+    public boolean canMoveVoluntarily() {
+        return false;
+    }
+
 
     @Override
     protected ActionResult interactMob(PlayerEntity player, Hand hand) {
@@ -44,6 +51,8 @@ public class Trader extends PathAwareEntity {
     @Override
     public void tick() {
         super.tick();
+        this.setVelocity(0, 0, 0); // Stop the trader from moving
+
         if (!this.getWorld().isClient) {
             PlayerEntity closestPlayer = this.getWorld().getClosestPlayer(
                     this.getX(),
