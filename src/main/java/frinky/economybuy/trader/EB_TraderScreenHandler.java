@@ -12,6 +12,7 @@ import net.minecraft.component.type.LoreComponent;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventory;
+import net.minecraft.inventory.SimpleInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -36,7 +37,6 @@ public class EB_TraderScreenHandler extends GenericContainerScreenHandler {
         BANKING
     }
 
-    private final Inventory inventory;
     private final Inventory playerInventory;
 
     private TraderScreen currentScreen = TraderScreen.SELECTION;
@@ -61,12 +61,11 @@ public class EB_TraderScreenHandler extends GenericContainerScreenHandler {
     private final Map<ItemStack, ItemStack> sellPlayerItems = new HashMap<>();
 
 
-    public EB_TraderScreenHandler(int syncId, PlayerInventory playerInventory, Inventory inventory) {
-        super(ScreenHandlerType.GENERIC_9X6, syncId, playerInventory, inventory, 6);
+    public EB_TraderScreenHandler(int syncId, PlayerInventory playerInventory) {
+        super(ScreenHandlerType.GENERIC_9X6, syncId, playerInventory, new SimpleInventory(6*9), 6);
 
         this.disableSyncing();
 
-        this.inventory = inventory;
         this.playerInventory = playerInventory;
 
 
@@ -94,13 +93,13 @@ public class EB_TraderScreenHandler extends GenericContainerScreenHandler {
 
 
 
-        inventory.clear();
+        getInventory().clear();
 
         if(currentScreen != TraderScreen.SELECTION)
         {
             ItemStack back = new ItemStack(Items.BARRIER);
             setItemCustomName(back, "Back");
-            inventory.setStack(BACK_SLOT, back);
+            getInventory().setStack(BACK_SLOT, back);
         }
 
         switch (currentScreen)
@@ -119,21 +118,21 @@ public class EB_TraderScreenHandler extends GenericContainerScreenHandler {
                 break;
         }
 
-        inventory.markDirty();
+        getInventory().markDirty();
     }
 
     private void drawSelection() {
         ItemStack buy = new ItemStack(Items.DIAMOND);
         setItemCustomName(buy, "BUY");
-        inventory.setStack(0, buy);
+        getInventory().setStack(0, buy);
 
         ItemStack sell = new ItemStack(Items.EMERALD);
         setItemCustomName(sell, "SELL");
-        inventory.setStack(1, sell);
+        getInventory().setStack(1, sell);
 
         ItemStack banking = new ItemStack(Items.GOLD_INGOT);
         setItemCustomName(banking, "BANKING");
-        inventory.setStack(2, banking);
+        getInventory().setStack(2, banking);
     }
 
     private void drawSell() {
@@ -142,14 +141,14 @@ public class EB_TraderScreenHandler extends GenericContainerScreenHandler {
             ItemStack stack = new ItemStack(Items.GOLD_INGOT);
             setItemCustomName(stack, "SELL ALL");
             setItemLore(stack, "Click to set to sell one mode");
-            inventory.setStack(0, stack);
+            getInventory().setStack(0, stack);
         }
         else
         {
             ItemStack stack = new ItemStack(Items.GOLD_NUGGET);
             setItemCustomName(stack, "SELL ONE");
             setItemLore(stack, "Click to set to sell all mode");
-            inventory.setStack(0, stack);
+            getInventory().setStack(0, stack);
         }
 
         List<ItemStack> sellableItems = new ArrayList<>();
@@ -183,7 +182,7 @@ public class EB_TraderScreenHandler extends GenericContainerScreenHandler {
                 setItemLore(stack, "+ $" + price);
 
             }
-            inventory.setStack(slotIndex, stack);
+            getInventory().setStack(slotIndex, stack);
             slotIndex++;
         }
     }
@@ -248,7 +247,7 @@ public class EB_TraderScreenHandler extends GenericContainerScreenHandler {
 
             ItemStack stack = new ItemStack(Items.BOOK);
             setItemCustomName(stack, category.name());
-            inventory.setStack(i, stack);
+            getInventory().setStack(i, stack);
             i++;
         }
     }
@@ -270,7 +269,7 @@ public class EB_TraderScreenHandler extends GenericContainerScreenHandler {
             }
 
             setItemLore(stack, "$" + price);
-            inventory.setStack(i, stack);
+            getInventory().setStack(i, stack);
         }
 
     }
@@ -283,7 +282,7 @@ public class EB_TraderScreenHandler extends GenericContainerScreenHandler {
 
     @Override
     public void onSlotClick(int slotIndex, int button, SlotActionType actionType, PlayerEntity player) {
-        if (slotIndex < 0 || slotIndex >= inventory.size()) {
+        if (slotIndex < 0 || slotIndex >= getInventory().size()) {
             super.onSlotClick(slotIndex, button, actionType, player);
             return;
         }
@@ -340,8 +339,15 @@ public class EB_TraderScreenHandler extends GenericContainerScreenHandler {
                         ItemStack itemStack = slots.get(slotIndex).getStack();
                         if(isTradeItem(itemStack.getItem()))
                         {
-                            buyingItem = itemStack.getItem();
-                            Refresh();
+                            if(getTradePrice(itemStack.getItem(), true) <= lastPlayerBalance)
+                            {
+                                buyingItem = itemStack.getItem();
+                                Refresh();
+                            }
+                            else
+                            {
+                                player.playSoundToPlayer(SoundEvents.BLOCK_ANVIL_LAND, SoundCategory.PLAYERS, 1, 1);
+                            }
                         }
 
                     }
@@ -369,10 +375,10 @@ public class EB_TraderScreenHandler extends GenericContainerScreenHandler {
                 }
                 else
                 {
-                    if(isTradeItem(inventory.getStack(slotIndex).getItem()))
+                    if(isTradeItem(getInventory().getStack(slotIndex).getItem()))
                     {
                         player.playSoundToPlayer(SoundEvents.ITEM_BUNDLE_INSERT, SoundCategory.PLAYERS, 1, 1);
-                        ItemStack playerItem = sellPlayerItems.get(inventory.getStack(slotIndex));
+                        ItemStack playerItem = sellPlayerItems.get(getInventory().getStack(slotIndex));
                         if(!playerItem.isEmpty())
                         {
                             sellItem(playerItem);
@@ -440,8 +446,8 @@ public class EB_TraderScreenHandler extends GenericContainerScreenHandler {
 
         ItemStack stack = new ItemStack(item.item);
         int price = getTradePrice(item.item, true);
-        setItemLore(stack, "- $" + price);
-        inventory.setStack(slot, stack);
+        setItemLore(stack, "$" + price);
+        getInventory().setStack(slot, stack);
     }
 
     private void setItemLore(ItemStack stack, String text) {

@@ -40,7 +40,7 @@ public class EB_Trader extends PathAwareEntity {
         // Open the trading screen
         if (!this.getWorld().isClient) {
             player.openHandledScreen(
-                    new SimpleNamedScreenHandlerFactory((syncId, playerInventory, playerEntity) -> new EB_TraderScreenHandler(syncId, playerInventory, traderInventory), this.getCustomName()
+                    new SimpleNamedScreenHandlerFactory((syncId, playerInventory, playerEntity) -> new EB_TraderScreenHandler(syncId, playerInventory), this.getCustomName()
             ));
             return ActionResult.SUCCESS;
         }
