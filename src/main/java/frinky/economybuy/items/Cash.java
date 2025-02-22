@@ -16,11 +16,11 @@ public class Cash extends Item implements EB_Cash_Interface {
 
     @Override
     public void appendTooltip(ItemStack stack, Item.TooltipContext context, List<Text> tooltip, TooltipType type) {
-        tooltip.add(Text.of("$" + getValue(stack)));
+        tooltip.add(Text.of("$" + getCashValue(stack)));
     }
 
     @Override
-    public int getValue(ItemStack stack) {
+    public int getCashValue(ItemStack stack) {
         return stack.getCount();
     }
 }

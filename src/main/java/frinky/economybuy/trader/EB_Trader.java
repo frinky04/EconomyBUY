@@ -1,4 +1,4 @@
-package frinky.economybuy;
+package frinky.economybuy.trader;
 
 import net.minecraft.command.argument.EntityAnchorArgumentType;
 import net.minecraft.entity.EntityType;
@@ -12,13 +12,13 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.world.World;
 
-public class Trader extends PathAwareEntity {
+public class EB_Trader extends PathAwareEntity {
 
     private static final double TRACKING_RANGE = 5D; // Range in blocks to track players
     private static final float MOVEMENT_SPEED = 0.5F;
     private final SimpleInventory traderInventory = new SimpleInventory(54);
 
-    protected Trader(EntityType<? extends PathAwareEntity> type, World world) {
+    public EB_Trader(EntityType<? extends PathAwareEntity> type, World world) {
         super(type, world);
         this.setInvulnerable(true); // Makes the NPC invulnerable
         this.setCustomName(Text.of("Trader")); // Sets the name of the NPC
@@ -40,7 +40,7 @@ public class Trader extends PathAwareEntity {
         // Open the trading screen
         if (!this.getWorld().isClient) {
             player.openHandledScreen(
-                    new SimpleNamedScreenHandlerFactory((syncId, playerInventory, playerEntity) -> new TraderScreenHandler(syncId, playerInventory, traderInventory), this.getCustomName()
+                    new SimpleNamedScreenHandlerFactory((syncId, playerInventory, playerEntity) -> new EB_TraderScreenHandler(syncId, playerInventory, traderInventory), this.getCustomName()
             ));
             return ActionResult.SUCCESS;
         }

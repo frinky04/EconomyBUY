@@ -1,7 +1,10 @@
 package frinky.economybuy;
 
 import com.mojang.brigadier.context.CommandContext;
+import frinky.economybuy.economy.EB_EconomyManager;
+import frinky.economybuy.trader.EB_Trader;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.minecraft.entity.Entity;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -14,6 +17,8 @@ public class EB_Commands {
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
             dispatcher.register(CommandManager.literal("balance").executes(EB_Commands::balance));
             dispatcher.register(CommandManager.literal("spawnTrader").executes(EB_Commands::spawnTrader));
+            dispatcher.register(CommandManager.literal("syncMarket").executes(EB_Commands::syncMarket));
+            dispatcher.register(CommandManager.literal("clearTraders").executes(EB_Commands::clearTraders));
         });
     }
 
@@ -38,14 +43,30 @@ public class EB_Commands {
         ServerPlayerEntity player = source.getPlayer();
 
         if (player != null) {
-            Trader trader = new Trader(EB_Entities.TRADER_ENTITY, world);
-            trader.setPosition(player.getX(), player.getY(), player.getZ());
-            world.spawnEntity(trader);
+            EB_Trader EBTrader = new EB_Trader(EB_Entities.TRADER_ENTITY, world);
+            EBTrader.setPosition(player.getX(), player.getY(), player.getZ());
+            world.spawnEntity(EBTrader);
             source.sendFeedback(() -> Text.literal("NPC spawned!"), false);
         }
 
         return 1;
     }
 
+    private static int clearTraders(CommandContext<ServerCommandSource> context) {
+        if(context.getSource().getPlayer() == null) {
+            return 0;
+        }
+
+        // remove all trader entities
+        context.getSource().getWorld().getEntitiesByType(EB_Entities.TRADER_ENTITY, entity -> true).forEach(entity -> entity.remove(Entity.RemovalReason.KILLED));
+
+
+        return 1;
+    }
+
+    private static int syncMarket(CommandContext<ServerCommandSource> context) {
+        EB_EconomyManager.getInstance().syncMarket(context.getSource().getServer());
+        return 1;
+    }
 
 }

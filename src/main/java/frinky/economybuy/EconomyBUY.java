@@ -1,6 +1,10 @@
 package frinky.economybuy;
 
+import frinky.economybuy.economy.EB_EconomyManager;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.text.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,6 +21,11 @@ public class EconomyBUY implements ModInitializer {
 		EB_Blocks.initialize();
 		EB_Entities.initialize();
 		EB_Commands.initialize();
+		EB_EconomyManager.initialize();
+		// Register server start callback
+		ServerLifecycleEvents.SERVER_STARTED.register(server -> {
+			EB_EconomyManager.getInstance().syncMarket(server);
+		});
 
 
 	}

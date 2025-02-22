@@ -18,12 +18,12 @@ public class BlockOfCash extends BlockItem implements EB_Cash_Interface {
 
     @Override
     public void appendTooltip(ItemStack stack, TooltipContext context, List<Text> tooltip, TooltipType type) {
-        tooltip.add(Text.of("$" + getValue(stack)));
+        tooltip.add(Text.of("$" + getCashValue(stack)));
     }
 
 
     @Override
-    public int getValue(ItemStack stack) {
+    public int getCashValue(ItemStack stack) {
         return stack.getCount() * 4 * 4 * 9;
     }
 }

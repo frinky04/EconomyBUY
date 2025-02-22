@@ -3,12 +3,13 @@ package frinky.economybuy.economy;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
 
-public class ShopItem
+public class EB_ShopItem
 {
-    public ShopItem(Item item, int price, Category category)
+    public EB_ShopItem(Item item, int buyPrice, int sellPrice, Category category)
     {
         this.item = item;
-        this.price = price;
+        this.buyPrice = buyPrice;
+        this.sellPrice = sellPrice;
         this.category = category;
     }
 
@@ -23,7 +24,8 @@ public class ShopItem
     }
 
     public Item item = Items.AIR;
-    public int price = 0;
+    public int buyPrice = 0;
+    public int sellPrice = 0;
     public Category category = Category.MISC;
 
 }
