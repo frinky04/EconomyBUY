@@ -2,8 +2,12 @@ package frinky.economybuy.economy;
 
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
+import frinky.economybuy.EB_Blocks;
+import frinky.economybuy.EB_Cash_Interface;
+import frinky.economybuy.EB_Items;
 import frinky.economybuy.EB_Util;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.registry.Registries;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.text.Text;
@@ -17,6 +21,7 @@ import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -24,13 +29,22 @@ import java.util.concurrent.CompletableFuture;
 public class EB_EconomyManager {
     private static EB_EconomyManager instance;
     public final List<EB_ShopItem> shopItems  = new ArrayList<>();
+    public final Map<Integer, Item> moneyValues = new HashMap<>();
+
+
+
 
     private EB_EconomyManager() {
         // Private constructor to prevent instantiation
 
+        moneyValues.put(1, EB_Items.CASH);
+        moneyValues.put(EB_Items.WAD_OF_CASH.getCashValue(new ItemStack(EB_Items.WAD_OF_CASH)), EB_Items.WAD_OF_CASH);
+        moneyValues.put(EB_Items.STACK_OF_CASH.getCashValue(new ItemStack(EB_Items.STACK_OF_CASH)), EB_Items.STACK_OF_CASH);
+        moneyValues.put(((EB_Cash_Interface) EB_Blocks.BLOCK_OF_CASH.asItem()).getCashValue(new ItemStack(EB_Blocks.BLOCK_OF_CASH.asItem())), EB_Blocks.BLOCK_OF_CASH.asItem());
+
     }
 
-    public static EB_EconomyManager getInstance() {
+    public static EB_EconomyManager get() {
         if (instance == null) {
             instance = new EB_EconomyManager();
         }
@@ -38,9 +52,8 @@ public class EB_EconomyManager {
     }
 
     public static void initialize() {
-        getInstance();
+        get();
     }
-
 
     public void syncMarket(MinecraftServer server) {
         String API_URL = "https://script.google.com/macros/s/AKfycbxBWq5ALmyL_2z7utHklZNWeW6Q3ED8ke25xIw5eUS7VQLCGK4MyxRXnR0ohRcpuUHb/exec";

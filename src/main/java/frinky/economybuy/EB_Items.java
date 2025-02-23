@@ -28,6 +28,8 @@ public class EB_Items {
         ItemGroupEvents.modifyEntriesEvent(ItemGroups.INGREDIENTS).register((itemGroup) -> itemGroup.add(EB_Items.CASH));
         ItemGroupEvents.modifyEntriesEvent(ItemGroups.INGREDIENTS).register((itemGroup) -> itemGroup.add(EB_Items.WAD_OF_CASH));
         ItemGroupEvents.modifyEntriesEvent(ItemGroups.INGREDIENTS).register((itemGroup) -> itemGroup.add(EB_Items.STACK_OF_CASH));
+        ItemGroupEvents.modifyEntriesEvent(ItemGroups.INGREDIENTS).register((itemGroup) -> itemGroup.add(EB_Items.RIGHT_ARROW));
+        ItemGroupEvents.modifyEntriesEvent(ItemGroups.INGREDIENTS).register((itemGroup) -> itemGroup.add(EB_Items.LEFT_ARROW));
 
         FuelRegistryEvents.BUILD.register((builder, context) -> {
             builder.add(CASH, 50);
@@ -46,4 +48,8 @@ public class EB_Items {
 
     // 81 Dollars
     public static final StackOfCash STACK_OF_CASH = (StackOfCash) register("stack_of_cash", StackOfCash::new, new Item.Settings().rarity(Rarity.EPIC));
+
+    // Items for UI
+    public static final Item RIGHT_ARROW = register("right_arrow", Item::new, new Item.Settings().rarity(Rarity.UNCOMMON));
+    public static final Item LEFT_ARROW = register("left_arrow", Item::new, new Item.Settings().rarity(Rarity.UNCOMMON));
 }

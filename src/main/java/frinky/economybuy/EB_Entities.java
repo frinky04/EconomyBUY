@@ -1,7 +1,11 @@
 package frinky.economybuy;
 
+import com.google.common.base.Suppliers;
+import frinky.economybuy.blocks.InterestChestBlockEntity;
 import frinky.economybuy.trader.EB_Trader;
+import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
+import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SpawnGroup;
 import net.minecraft.registry.Registries;
@@ -9,6 +13,8 @@ import net.minecraft.registry.Registry;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.util.Identifier;
+
+import java.util.function.Supplier;
 
 public class EB_Entities {
 

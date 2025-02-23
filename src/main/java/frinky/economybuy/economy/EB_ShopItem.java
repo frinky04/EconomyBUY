@@ -20,12 +20,14 @@ public class EB_ShopItem
         ARMOR,
         TOOLS,
         MATERIALS,
+        FOOD,
+        REDSTONE,
         MISC
     }
 
-    public Item item = Items.AIR;
-    public int buyPrice = 0;
-    public int sellPrice = 0;
-    public Category category = Category.MISC;
+    public Item item;
+    public int buyPrice;
+    public int sellPrice;
+    public Category category;
 
 }

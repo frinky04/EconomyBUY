@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "particle": "economybuy:block/interest_chest_front",
+    "north": "economybuy:block/interest_chest_side",
+    "south": "economybuy:block/interest_chest_front",
+    "east": "economybuy:block/interest_chest_side",
+    "west": "economybuy:block/interest_chest_side",
+    "up": "economybuy:block/interest_chest_top",
+    "down": "economybuy:block/interest_chest_bottom"
+  }
+}

@@ -26,7 +26,7 @@ public class EB_Commands {
         if(context.getSource().getPlayer() == null) {
             return 0;
         }
-        context.getSource().sendMessage(Text.literal("Your balance is: " + EB_Util.GetNetWorth(context.getSource().getPlayer())));
+        context.getSource().sendMessage(Text.literal("The money in your inventory adds up to: " + EB_Util.GetNetWorth(context.getSource().getPlayer())));
 
         return 1;
     }
@@ -65,7 +65,7 @@ public class EB_Commands {
     }
 
     private static int syncMarket(CommandContext<ServerCommandSource> context) {
-        EB_EconomyManager.getInstance().syncMarket(context.getSource().getServer());
+        EB_EconomyManager.get().syncMarket(context.getSource().getServer());
         return 1;
     }
 

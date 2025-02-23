@@ -3,5 +3,7 @@
   "item.economybuy.wad_of_cash": "Wad of Cash",
   "item.economybuy.stack_of_cash": "Stack of Cash",
   "item.economybuy.block_of_cash": "Block of Cash",
+  "item.economybuy.right_arrow": "Right Arrow",
+  "item.economybuy.left_arrow": "Left Arrow",
   "block.economybuy.block_of_cash": "Block of Cash"
 }

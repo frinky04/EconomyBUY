@@ -1,7 +1,5 @@
 package frinky.economybuy.trader;
 
-import frinky.economybuy.EB_Blocks;
-import frinky.economybuy.EB_Cash_Interface;
 import frinky.economybuy.EB_Items;
 import frinky.economybuy.EB_Util;
 import frinky.economybuy.economy.EB_EconomyManager;
@@ -44,18 +42,18 @@ public class EB_TraderScreenHandler extends GenericContainerScreenHandler {
     private EB_ShopItem.Category currentCategory = EB_ShopItem.Category.NONE;
     private Item buyingItem = Items.AIR;
     private int page = 0;
+    private int maxPage = 0;
     private boolean sellAll = false;
 
     private final int BACK_SLOT = 8;
-    private final int LEFT_ARROW_SLOT = 45;
-    private final int RIGHT_ARROW_SLOT = 53;
+    private final int BACK_PAGE_SLOT = 45;
+    private final int NEXT_PAGE_SLOT = 53;
 
     private final float CLICK_COOLDOWN = 0.1f;
     private long previousClickTime = 0;
     private int lastPlayerBalance = 0;
 
     // money values
-    private final Map<Integer, Item> moneyValues = new HashMap<>();
 
     // a map that contains the item in the trader inventory and the item in the player inventory, so we can remove the correct item
     private final Map<ItemStack, ItemStack> sellPlayerItems = new HashMap<>();
@@ -65,15 +63,11 @@ public class EB_TraderScreenHandler extends GenericContainerScreenHandler {
         super(ScreenHandlerType.GENERIC_9X6, syncId, playerInventory, new SimpleInventory(6*9), 6);
 
         this.disableSyncing();
-
         this.playerInventory = playerInventory;
 
 
 
-        moneyValues.put(1, EB_Items.CASH);
-        moneyValues.put(EB_Items.WAD_OF_CASH.getCashValue(new ItemStack(EB_Items.WAD_OF_CASH)), EB_Items.WAD_OF_CASH);
-        moneyValues.put(EB_Items.STACK_OF_CASH.getCashValue(new ItemStack(EB_Items.STACK_OF_CASH)), EB_Items.STACK_OF_CASH);
-        moneyValues.put(((EB_Cash_Interface) EB_Blocks.BLOCK_OF_CASH.asItem()).getCashValue(new ItemStack(EB_Blocks.BLOCK_OF_CASH.asItem())), EB_Blocks.BLOCK_OF_CASH.asItem());
+
 
         refreshItems();
 
@@ -81,7 +75,7 @@ public class EB_TraderScreenHandler extends GenericContainerScreenHandler {
     }
 
     private void refreshItems() {
-        tradeItems = EB_EconomyManager.getInstance().shopItems;
+        tradeItems = EB_EconomyManager.get().shopItems;
     }
 
     void Refresh() {
@@ -158,7 +152,7 @@ public class EB_TraderScreenHandler extends GenericContainerScreenHandler {
             {
                 continue;
             }
-            if(isTradeItem(stack.getItem()))
+            if(EB_Util.isTradeItem(stack.getItem()))
             {
                 sellableItems.add(stack);
             }
@@ -172,7 +166,7 @@ public class EB_TraderScreenHandler extends GenericContainerScreenHandler {
             }
             ItemStack stack = sellableItem.copy();
             sellPlayerItems.put(stack, sellableItem);
-            int price = getTradePrice(stack.getItem(), false);
+            int price = EB_Util.getTradePrice(stack.getItem(), false);
             if(sellAll)
             {
                 setItemLore(stack, "+ $" + price * stack.getCount());
@@ -210,29 +204,41 @@ public class EB_TraderScreenHandler extends GenericContainerScreenHandler {
 
     // Draw the items in the current selected category
     private void drawBuy_Items() {
-        int i = 0;
+        int start = 9;
+        int end = 45;  // Changed from 44 to 45 to include the last slot
+        int itemsPerPage = end - start;
+
+        List<EB_ShopItem> itemsToList = new ArrayList<>();
         for (EB_ShopItem item : tradeItems) {
-            if(i > 52) // only show 45 items at a time
-            {
-                break;
+            if (item.category.equals(currentCategory) && item.buyPrice > 0) {
+                itemsToList.add(item);
             }
-            if(i == BACK_SLOT || i == LEFT_ARROW_SLOT || i == RIGHT_ARROW_SLOT)
-            {
-                i++;
-            }
+        }
 
-            if(!item.category.equals(currentCategory)) // only list items in the current category
-            {
-                continue;
-            }
+        maxPage = (int) Math.ceil((double) itemsToList.size() / itemsPerPage);
+        boolean isMoreThanOnePage = maxPage > 1;
 
-            if(item.buyPrice == 0) // don't list items that can't be bought
-            {
-                continue;
-            }
+        // Navigation arrows
+        if (isMoreThanOnePage && page < maxPage - 1) {
+            ItemStack stack = new ItemStack(EB_Items.RIGHT_ARROW);
+            setItemCustomName(stack, "Page " + (page + 1) + "/" + maxPage);
+            getInventory().setStack(NEXT_PAGE_SLOT, stack);
+        }
+        if (page > 0) {
+            ItemStack stack = new ItemStack(EB_Items.LEFT_ARROW);
+            setItemCustomName(stack, "Page " + (page + 1) + "/" + maxPage);
+            getInventory().setStack(BACK_PAGE_SLOT, stack);
+        }
 
-            addBuyItem(item, i);
-            i++;
+        // Calculate start and end indices for current page
+        int startIndex = page * itemsPerPage;
+        int endIndex = Math.min(startIndex + itemsPerPage, itemsToList.size());
+
+        // Draw items for current page
+        int slot = start;
+        for (int i = startIndex; i < endIndex && slot < end; i++) {
+            addBuyItem(itemsToList.get(i), slot);
+            slot++;
         }
     }
 
@@ -261,7 +267,7 @@ public class EB_TraderScreenHandler extends GenericContainerScreenHandler {
                 break;
             }
             ItemStack stack = new ItemStack(item, amounts[i]);
-            int price = getTradePrice(item, true) * amounts[i];
+            int price = EB_Util.getTradePrice(item, true) * amounts[i];
 
             if(price > lastPlayerBalance)
             {
@@ -282,6 +288,8 @@ public class EB_TraderScreenHandler extends GenericContainerScreenHandler {
 
     @Override
     public void onSlotClick(int slotIndex, int button, SlotActionType actionType, PlayerEntity player) {
+        super.onSlotClick(slotIndex, button, actionType, player);
+
         if (slotIndex < 0 || slotIndex >= getInventory().size()) {
             super.onSlotClick(slotIndex, button, actionType, player);
             return;
@@ -300,98 +308,105 @@ public class EB_TraderScreenHandler extends GenericContainerScreenHandler {
         {
             player.playSoundToPlayer(SoundEvents.BLOCK_STONE_BUTTON_CLICK_ON, SoundCategory.PLAYERS, 1, 2);
             onBack();
-            return;
         }
+        else {
 
-        switch (currentScreen)
-        {
-            case SELECTION:
-                switch (slotIndex)
-                {
-                    case 0:
-                        player.playSoundToPlayer(SoundEvents.BLOCK_WOODEN_BUTTON_CLICK_ON, SoundCategory.PLAYERS, 1, 2);
-                        currentScreen = TraderScreen.BUY;
-                        break;
-                    case 1:
-                        player.playSoundToPlayer(SoundEvents.ITEM_BUNDLE_INSERT, SoundCategory.PLAYERS, 1, 1);
-                        currentScreen = TraderScreen.SELL;
-                        break;
-                    case 2:
-                        player.playSoundToPlayer(SoundEvents.BLOCK_METAL_PLACE, SoundCategory.PLAYERS, 1, 1);
-                        currentScreen = TraderScreen.BANKING;
-                        break;
-                }
-                Refresh();
-                break;
-            case BUY:
-                if(buyingItem == Items.AIR)
-                {
-                    player.playSoundToPlayer(SoundEvents.BLOCK_WOODEN_BUTTON_CLICK_ON, SoundCategory.PLAYERS, 1, 2);
-                    if(currentCategory == EB_ShopItem.Category.NONE)
+            switch (currentScreen) {
+                case SELECTION:
+                    switch (slotIndex) {
+                        case 0:
+                            player.playSoundToPlayer(SoundEvents.BLOCK_WOODEN_BUTTON_CLICK_ON, SoundCategory.PLAYERS, 1, 2);
+                            currentScreen = TraderScreen.BUY;
+                            break;
+                        case 1:
+                            player.playSoundToPlayer(SoundEvents.ITEM_BUNDLE_INSERT, SoundCategory.PLAYERS, 1, 1);
+                            currentScreen = TraderScreen.SELL;
+                            break;
+                        case 2:
+                            player.playSoundToPlayer(SoundEvents.BLOCK_METAL_PLACE, SoundCategory.PLAYERS, 1, 1);
+                            currentScreen = TraderScreen.BANKING;
+                            break;
+                    }
+                    Refresh();
+                    break;
+                case BUY:
+                    if (buyingItem == Items.AIR)
                     {
-                        // we're selecting a category
-                        currentCategory = EB_ShopItem.Category.values()[slotIndex+1];
-                        Refresh();
+                        if (slotIndex == BACK_PAGE_SLOT && slots.get(slotIndex).getStack().getItem() == EB_Items.LEFT_ARROW) {
+                            player.playSoundToPlayer(SoundEvents.BLOCK_METAL_PRESSURE_PLATE_CLICK_ON, SoundCategory.PLAYERS, 1, 2);
+                            page--;
+                            page = Math.max(page, 0);
+                            Refresh();
+                            return;
+                        }
+
+                        if (slotIndex == NEXT_PAGE_SLOT && slots.get(slotIndex).getStack().getItem() == EB_Items.RIGHT_ARROW) {
+                            player.playSoundToPlayer(SoundEvents.BLOCK_METAL_PRESSURE_PLATE_CLICK_ON, SoundCategory.PLAYERS, 1, 2);
+                            page++;
+                            page = Math.min(page, maxPage - 1);
+                            Refresh();
+                            return;
+                        }
+
+                        // if we didn't click air, play a sound
+                        if(slots.get(slotIndex).getStack().getItem() != Items.AIR) {
+                            player.playSoundToPlayer(SoundEvents.BLOCK_WOODEN_BUTTON_CLICK_ON, SoundCategory.PLAYERS, 1, 2);
+                        }
+                            if (currentCategory == EB_ShopItem.Category.NONE) {
+                            // we're selecting a category
+                            if (slotIndex < EB_ShopItem.Category.values().length - 1) { // -1 because we skip NONE
+                                currentCategory = EB_ShopItem.Category.values()[slotIndex + 1];
+                                Refresh();
+                            }
+                        } else {
+                            // we're selecting an item
+                            ItemStack itemStack = slots.get(slotIndex).getStack();
+                            if (EB_Util.isTradeItem(itemStack.getItem())) {
+                                if (EB_Util.getTradePrice(itemStack.getItem(), true) <= lastPlayerBalance) {
+                                    buyingItem = itemStack.getItem();
+                                    Refresh();
+                                } else {
+                                    player.playSoundToPlayer(SoundEvents.BLOCK_ANVIL_LAND, SoundCategory.PLAYERS, 1, 1);
+                                }
+                            }
+
+                        }
                     }
                     else
                     {
-                        // we're selecting an item
+                        // we're selecting an amount
                         ItemStack itemStack = slots.get(slotIndex).getStack();
-                        if(isTradeItem(itemStack.getItem()))
-                        {
-                            if(getTradePrice(itemStack.getItem(), true) <= lastPlayerBalance)
-                            {
-                                buyingItem = itemStack.getItem();
+
+                        if (itemStack.getItem() == buyingItem) {
+                            attemptBuyItem(buyingItem, itemStack.getCount(), player);
+                        }
+
+                    }
+                    break;
+                case SELL:
+                    if (slotIndex == 0) {
+                        player.playSoundToPlayer(SoundEvents.BLOCK_TRIPWIRE_CLICK_ON, SoundCategory.PLAYERS, 1, 1);
+
+                        sellAll = !sellAll;
+                        Refresh();
+                        return;
+                    } else {
+                        if (EB_Util.isTradeItem(getInventory().getStack(slotIndex).getItem())) {
+                            player.playSoundToPlayer(SoundEvents.ITEM_BUNDLE_INSERT, SoundCategory.PLAYERS, 1, 1);
+                            ItemStack playerItem = sellPlayerItems.get(getInventory().getStack(slotIndex));
+                            if (!playerItem.isEmpty()) {
+                                sellItem(playerItem);
                                 Refresh();
                             }
-                            else
-                            {
-                                player.playSoundToPlayer(SoundEvents.BLOCK_ANVIL_LAND, SoundCategory.PLAYERS, 1, 1);
-                            }
-                        }
-
-                    }
-                }
-                else
-                {
-                    // we're selecting an amount
-                    ItemStack itemStack = slots.get(slotIndex).getStack();
-
-                    if(itemStack.getItem() == buyingItem)
-                    {
-                        attemptBuyItem(buyingItem, itemStack.getCount(), player);
-                    }
-
-                }
-                break;
-            case SELL:
-                if(slotIndex == 0)
-                {
-                    player.playSoundToPlayer(SoundEvents.BLOCK_TRIPWIRE_CLICK_ON, SoundCategory.PLAYERS, 1, 1);
-
-                    sellAll = !sellAll;
-                    Refresh();
-                    return;
-                }
-                else
-                {
-                    if(isTradeItem(getInventory().getStack(slotIndex).getItem()))
-                    {
-                        player.playSoundToPlayer(SoundEvents.ITEM_BUNDLE_INSERT, SoundCategory.PLAYERS, 1, 1);
-                        ItemStack playerItem = sellPlayerItems.get(getInventory().getStack(slotIndex));
-                        if(!playerItem.isEmpty())
-                        {
-                            sellItem(playerItem);
-                            Refresh();
                         }
                     }
-                }
-                break;
-            case BANKING:
+                    break;
+                case BANKING:
 
-                break;
+                    break;
+            }
         }
-        super.onSlotClick(slotIndex, button, actionType, player);
+
     }
 
     private void onBack() {
@@ -445,7 +460,7 @@ public class EB_TraderScreenHandler extends GenericContainerScreenHandler {
     private void addBuyItem(EB_ShopItem item, int slot) {
 
         ItemStack stack = new ItemStack(item.item);
-        int price = getTradePrice(item.item, true);
+        int price = EB_Util.getTradePrice(item.item, true);
         setItemLore(stack, "$" + price);
         getInventory().setStack(slot, stack);
     }
@@ -466,154 +481,15 @@ public class EB_TraderScreenHandler extends GenericContainerScreenHandler {
 
     }
 
-    private boolean isTradeItem(Item item) {
-        for (EB_ShopItem shopItem : tradeItems) {
-            if(shopItem.item == item)
-            {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private int getTradePrice(Item item, boolean buy) {
-        for (EB_ShopItem shopItem : tradeItems) {
-            if(shopItem.item == item)
-            {
-                return buy ? shopItem.buyPrice : shopItem.sellPrice;
-            }
-        }
-        return 0;
-    }
-
-    private List<ItemStack> getCashStacks(int price) {
-        List<ItemStack> stacks = new ArrayList<>();
-
-        // Get a sorted list of the cash denominations (largest to smallest)
-        List<Integer> denominations = new ArrayList<>(moneyValues.keySet());
-        denominations.sort(Collections.reverseOrder());
-
-        for (int value : denominations) {
-            if (price <= 0) break;  // Stop if we've reached the target value
-
-            // Determine how many items of this denomination are needed.
-            int count = price / value;
-            if (count > 0) {
-                // Create an ItemStack for this cash item.
-                ItemStack stack = new ItemStack(moneyValues.get(value), count);
-                stacks.add(stack);
-                // Reduce the remaining price.
-                price -= value * count;
-            }
-        }
-        return stacks;
-    }
-
-    private void takeCashFromPlayer(int price) {
-        // Step 1: Tally up available coins by denomination from the player's inventory.
-        // 'available' maps coin denomination -> count available.
-        Map<Integer, Integer> available = new HashMap<>();
-        for (int i = 0; i < playerInventory.size(); i++) {
-            ItemStack stack = playerInventory.getStack(i);
-            if (stack.isEmpty()) continue;
-            for (Map.Entry<Integer, Item> entry : moneyValues.entrySet()) {
-                if (stack.getItem() == entry.getValue()) {
-                    int coinValue = entry.getKey();
-                    available.put(coinValue, available.getOrDefault(coinValue, 0) + stack.getCount());
-                }
-            }
-        }
-
-        // Step 2: Create a sorted list of the coin denominations (ascending order).
-        List<Integer> coins = new ArrayList<>(available.keySet());
-        Collections.sort(coins);
-
-        // We'll use DFS to find the coin combination that sums to exactly 'price' (or minimally exceeds it).
-        // bestCombination will hold the mapping: coin value -> count used.
-        final Map<Integer, Integer>[] bestCombination = new Map[]{ null };
-        final int[] bestOverpay = new int[]{ Integer.MAX_VALUE };
-
-        // Recursive DFS class.
-        class DFS {
-            void search(int index, int currentSum, Map<Integer, Integer> combination) {
-                // If we've considered all coin types, check if we've reached (or exceeded) the price.
-                if (index == coins.size()) {
-                    if (currentSum >= price) {
-                        int overpay = currentSum - price;
-                        // If this combination is better (i.e. lower overpay) than the current best, store it.
-                        if (overpay < bestOverpay[0]) {
-                            bestOverpay[0] = overpay;
-                            bestCombination[0] = new HashMap<>(combination);
-                        }
-                    }
-                    return;
-                }
-                int coinValue = coins.get(index);
-                int maxAvailable = available.get(coinValue);
-                // Limit the number of coins to try.
-                // We need no more than enough coins to reach the remaining amount (plus one extra to allow overshooting).
-                int maxNeeded = (price - currentSum + coinValue - 1) / coinValue;
-                maxNeeded = Math.min(maxAvailable, maxNeeded + 1);
-                for (int count = 0; count <= maxNeeded; count++) {
-                    combination.put(coinValue, count);
-                    search(index + 1, currentSum + count * coinValue, combination);
-                }
-                combination.remove(coinValue);
-            }
-        }
-
-        DFS dfs = new DFS();
-        dfs.search(0, 0, new HashMap<>());
-
-        // If no combination is found (which shouldn't happen if the player has enough cash), exit.
-        if (bestCombination[0] == null) {
-            return;
-        }
-
-        // Calculate the total taken and the overpayment.
-        int totalTaken = price + bestOverpay[0];
-
-        // Step 3: Remove the coins used in the best combination from the player's inventory.
-        // For each coin type in the best combination, remove that many coins.
-        for (Map.Entry<Integer, Integer> entry : bestCombination[0].entrySet()) {
-            int coinValue = entry.getKey();
-            int countToRemove = entry.getValue();
-            if (countToRemove <= 0) continue;
-            Item coinItem = moneyValues.get(coinValue);
-            for (int i = 0; i < playerInventory.size() && countToRemove > 0; i++) {
-                ItemStack stack = playerInventory.getStack(i);
-                if (!stack.isEmpty() && stack.getItem() == coinItem) {
-                    int stackCount = stack.getCount();
-                    if (stackCount <= countToRemove) {
-                        countToRemove -= stackCount;
-                        playerInventory.setStack(i, ItemStack.EMPTY);
-                    } else {
-                        stack.decrement(countToRemove);
-                        countToRemove = 0;
-                    }
-                }
-            }
-        }
-
-        // Step 4: If the combination overpaid, calculate and return change.
-        int change = bestOverpay[0];
-        if (change > 0) {
-            List<ItemStack> changeStacks = getCashStacks(change);
-            for (ItemStack changeStack : changeStacks) {
-                ((PlayerInventory) playerInventory).offerOrDrop(changeStack);
-            }
-        }
-    }
-
     private void sellItem(ItemStack playerItem) {
-        int price = getTradePrice(playerItem.getItem(), false);
+        int price = EB_Util.getTradePrice(playerItem.getItem(), false);
         if(sellAll)
         {
             price *= playerItem.getCount();
         }
 
         // use the get cash stacks method to get the cash stacks
-        List<ItemStack> cashStacks = getCashStacks(price);
+        List<ItemStack> cashStacks = EB_Util.getCashStacks(price);
 
         // add the cash stacks to the player inventory
         for (ItemStack cashStack : cashStacks) {
@@ -626,7 +502,7 @@ public class EB_TraderScreenHandler extends GenericContainerScreenHandler {
 
     private void attemptBuyItem(Item item, int amount, PlayerEntity player){
         int playerInventoryBalance = EB_Util.GetInventoryBalance(playerInventory);
-        int price = getTradePrice(item, true) * amount;
+        int price = EB_Util.getTradePrice(item, true) * amount;
 
         if(price > playerInventoryBalance)
         {
@@ -634,11 +510,13 @@ public class EB_TraderScreenHandler extends GenericContainerScreenHandler {
             return;
         }
 
-        takeCashFromPlayer(price);
+        EB_Util.takeCashFromPlayer(price, (PlayerInventory) playerInventory);
         // give the player the item
         ItemStack stack = new ItemStack(item, amount);
         PlayerInventory castedInventory = (PlayerInventory) playerInventory;
         castedInventory.offerOrDrop(stack);
+
+        player.playSoundToPlayer(SoundEvents.ENTITY_FIREWORK_ROCKET_LAUNCH, SoundCategory.PLAYERS, 1, 1);
 
     }
 

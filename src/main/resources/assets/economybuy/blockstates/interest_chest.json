@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north,type=single": { "model": "economybuy:block/interest_chest" },
+    "facing=south,type=single": { "model": "economybuy:block/interest_chest", "y": 180 },
+    "facing=west,type=single": { "model": "economybuy:block/interest_chest", "y": 270 },
+    "facing=east,type=single": { "model": "economybuy:block/interest_chest", "y": 90 }
+  }
+}
